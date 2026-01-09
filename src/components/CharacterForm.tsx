@@ -1,239 +1,321 @@
-import React, { useRef, useState } from "react";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
-import "./CharacterSheet.css";
+import React, { useState } from "react";
+import { CharacterData } from "../types/CharacterData";
+import { TextInput, TextArea, ListInput } from "./Input";
+import { generateCharacterPDF } from "../pdf/generateCharacterPDF";
+import "./CharacterForm.css";
 
-interface CharacterData {
-  name: string;
-  age: string;
-  sex: string;
-  birthdate: string;
-  birthSign: string;
-  bloodType: string;
-  birthPlace: string;
-  height: string;
-  weight: string;
-  eyesight: string;
-  handedness: string;
-  hairColor: string;
-  eyeColor: string;
-  voiceType: string;
+const empty: CharacterData = {
+  // Identity
+  name: "",
+  age: "",
+  sex: "",
 
-  surgeries: string;
-  scars: string;
-  distinctiveFeatures: string;
+  // Birth
+  birthdate: "",
+  birthSign: "",
+  bloodType: "",
+  birthPlace: "",
 
-  race: string;
-  religion: string;
+  // Physical
+  height: "",
+  weight: "",
+  eyesight: "",
+  handedness: "",
+  hairColor: "",
+  eyeColor: "",
+  voiceType: "",
 
-  criminalRecord: string;
-  awardsEducation: string;
+  // Medical / Physical history
+  surgeriesIllnesses: "",
+  scarsTattoos: "",
+  distinctivePhysicalTraits: "",
 
-  childhood: string;
-  sexualHistory: string;
-  admiredPeople: string;
-  dislikedPeople: string;
+  // Background
+  race: "",
+  religion: "",
 
-  dreams: string;
-  fears: string;
+  // Legal / Education
+  criminalRecord: "",
+  educationAndAwards: [""],
 
-  personalityTraits: string;
+  // Life history
+  childhood: "",
+  sexualHistory: "",
+  admiredPeople: "",
+  dislikedPeople: "",
 
-  romanticRelationships: string;
-  familyRelationships: string;
-  problemRelationships: string;
+  // Psychology
+  dreams: "",
+  fears: "",
+  personalityTraits: "",
 
-  employment: string;
-  economicStatus: string;
-  petsPlants: string;
+  // Relationships
+  romanticRelationships: "",
+  familyRelationships: "",
+  problemRelationships: "",
 
-  specialSkills: string;
-  hobbies: string;
-  likesDislikes: string;
-  habits: string;
-  favoritePhrases: string;
-  others: string;
-}
+  // Life situation
+  employment: "",
+  economicStatus: "",
+  petsAndPlants: "",
 
-const CharacterSheet: React.FC = () => {
-  const sheetRef = useRef<HTMLDivElement>(null);
+  // Skills & habits
+  specialSkills: [""],
+  hobbies: [""],
+  likesDislikes: "",
+  habits: "",
+  favoritePhrases: "",
 
-  const [data, setData] = useState<CharacterData>({
-    name: "",
-    age: "",
-    sex: "",
-    birthdate: "",
-    birthSign: "",
-    bloodType: "",
-    birthPlace: "",
-    height: "",
-    weight: "",
-    eyesight: "",
-    handedness: "",
-    hairColor: "",
-    eyeColor: "",
-    voiceType: "",
+  // Misc
+  others: "",
+};
 
-    surgeries: "",
-    scars: "",
-    distinctiveFeatures: "",
-
-    race: "",
-    religion: "",
-
-    criminalRecord: "",
-    awardsEducation: "",
-
-    childhood: "",
-    sexualHistory: "",
-    admiredPeople: "",
-    dislikedPeople: "",
-
-    dreams: "",
-    fears: "",
-
-    personalityTraits: "",
-
-    romanticRelationships: "",
-    familyRelationships: "",
-    problemRelationships: "",
-
-    employment: "",
-    economicStatus: "",
-    petsPlants: "",
-
-    specialSkills: "",
-    hobbies: "",
-    likesDislikes: "",
-    habits: "",
-    favoritePhrases: "",
-    others: "",
-  });
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const exportPDF = async () => {
-    if (!sheetRef.current) return;
-
-    const canvas = await html2canvas(sheetRef.current, { scale: 2 });
-    const imgData = canvas.toDataURL("image/png");
-
-    const pdf = new jsPDF("p", "mm", "a4");
-    const width = pdf.internal.pageSize.getWidth();
-    const height = (canvas.height * width) / canvas.width;
-
-    pdf.addImage(imgData, "PNG", 0, 0, width, height);
-    pdf.save("Character_History_Full.pdf");
-  };
-
-  const Field = ({
-    label,
-    name,
-  }: {
-    label: string;
-    name: keyof CharacterData;
-  }) => (
-    <div className="box">
-      <label>{label}</label>
-      <input name={name} value={data[name]} onChange={handleChange} />
-    </div>
-  );
-
-  const Area = ({
-    label,
-    name,
-  }: {
-    label: string;
-    name: keyof CharacterData;
-  }) => (
-    <div className="box full">
-      <label>{label}</label>
-      <textarea name={name} value={data[name]} onChange={handleChange} />
-    </div>
-  );
+const CharacterForm: React.FC = () => {
+  const [data, setData] = useState<CharacterData>(empty);
 
   return (
     <>
-      <div className="sheet" ref={sheetRef}>
+      <div className="sheet">
         <h2 className="title">Character History</h2>
 
-        <div className="grid">
-          <Field label="Name / Nicknames" name="name" />
-          <Field label="Age" name="age" />
-          <Field label="Sex" name="sex" />
+        {/* ================= BASIC INFO ================= */}
+        <TextInput
+          label="Name / Nicknames"
+          value={data.name}
+          onChange={(v: string) => setData({ ...data, name: v })}
+        />
+        <TextInput
+          label="Age"
+          value={data.age}
+          onChange={(v: string) => setData({ ...data, age: v })}
+        />
+        <TextInput
+          label="Sex"
+          value={data.sex}
+          onChange={(v: string) => setData({ ...data, sex: v })}
+        />
 
-          <Field label="Birthdate" name="birthdate" />
-          <Field label="Birth Sign" name="birthSign" />
-          <Field label="Blood Type" name="bloodType" />
-          <Field label="Birth Place" name="birthPlace" />
+        {/* ================= BIRTH ================= */}
+        <TextInput
+          label="Birthdate"
+          value={data.birthdate}
+          onChange={(v: string) => setData({ ...data, birthdate: v })}
+        />
+        <TextInput
+          label="Birth Sign"
+          value={data.birthSign}
+          onChange={(v: string) => setData({ ...data, birthSign: v })}
+        />
+        <TextInput
+          label="Blood Type"
+          value={data.bloodType}
+          onChange={(v: string) => setData({ ...data, bloodType: v })}
+        />
+        <TextInput
+          label="Birth Place"
+          value={data.birthPlace}
+          onChange={(v: string) => setData({ ...data, birthPlace: v })}
+        />
 
-          <Field label="Height" name="height" />
-          <Field label="Weight" name="weight" />
-          <Field label="Eyesight / Glasses" name="eyesight" />
-          <Field label="Handedness" name="handedness" />
-          <Field label="Hair Color" name="hairColor" />
-          <Field label="Eye Color" name="eyeColor" />
-          <Field label="Type of Voice" name="voiceType" />
+        {/* ================= PHYSICAL ================= */}
+        <TextInput
+          label="Height"
+          value={data.height}
+          onChange={(v: string) => setData({ ...data, height: v })}
+        />
+        <TextInput
+          label="Weight"
+          value={data.weight}
+          onChange={(v: string) => setData({ ...data, weight: v })}
+        />
+        <TextInput
+          label="Eyesight / Glasses"
+          value={data.eyesight}
+          onChange={(v: string) => setData({ ...data, eyesight: v })}
+        />
+        <TextInput
+          label="Handedness"
+          value={data.handedness}
+          onChange={(v: string) => setData({ ...data, handedness: v })}
+        />
+        <TextInput
+          label="Hair Color"
+          value={data.hairColor}
+          onChange={(v: string) => setData({ ...data, hairColor: v })}
+        />
+        <TextInput
+          label="Eye Color"
+          value={data.eyeColor}
+          onChange={(v: string) => setData({ ...data, eyeColor: v })}
+        />
+        <TextInput
+          label="Type of Voice"
+          value={data.voiceType}
+          onChange={(v: string) => setData({ ...data, voiceType: v })}
+        />
 
-          <Area
-            label="History of Surgeries / Cavities / Illnesses"
-            name="surgeries"
-          />
-          <Area label="Scars / Burns / Skin Damage / Tattoos" name="scars" />
-          <Area
-            label="Other Distinctive Physical Characteristics"
-            name="distinctiveFeatures"
-          />
+        {/* ================= MEDICAL ================= */}
+        <TextArea
+          label="History of Surgeries / Cavities / Illnesses"
+          value={data.surgeriesIllnesses}
+          onChange={(v: string) => setData({ ...data, surgeriesIllnesses: v })}
+        />
+        <TextArea
+          label="Scars / Burns / Skin Damage / Tattoos"
+          value={data.scarsTattoos}
+          onChange={(v: string) => setData({ ...data, scarsTattoos: v })}
+        />
+        <TextArea
+          label="Other Distinctive Physical Characteristics"
+          value={data.distinctivePhysicalTraits}
+          onChange={(v: string) =>
+            setData({ ...data, distinctivePhysicalTraits: v })
+          }
+        />
 
-          <Field label="Race" name="race" />
-          <Field label="Religion" name="religion" />
+        {/* ================= BACKGROUND ================= */}
+        <TextInput
+          label="Race"
+          value={data.race}
+          onChange={(v: string) => setData({ ...data, race: v })}
+        />
+        <TextInput
+          label="Religion"
+          value={data.religion}
+          onChange={(v: string) => setData({ ...data, religion: v })}
+        />
 
-          <Area label="Criminal Record" name="criminalRecord" />
-          <Area label="Awards / Education" name="awardsEducation" />
+        {/* ================= LEGAL / EDUCATION ================= */}
+        <TextArea
+          label="Criminal Record"
+          value={data.criminalRecord}
+          onChange={(v: string) => setData({ ...data, criminalRecord: v })}
+        />
+        <ListInput
+          label="Awards / Education"
+          values={data.educationAndAwards}
+          onChange={(v: string[]) =>
+            setData({ ...data, educationAndAwards: v })
+          }
+        />
 
-          <Area label="Formative Experiences / Childhood" name="childhood" />
-          <Area label="Sexual History / Lovers" name="sexualHistory" />
-          <Area label="People the Subject Admires" name="admiredPeople" />
-          <Area label="People the Subject Dislikes" name="dislikedPeople" />
+        {/* ================= LIFE HISTORY ================= */}
+        <TextArea
+          label="Formative Experiences / Childhood"
+          value={data.childhood}
+          onChange={(v: string) => setData({ ...data, childhood: v })}
+        />
+        <TextArea
+          label="Sexual History / Lovers"
+          value={data.sexualHistory}
+          onChange={(v: string) => setData({ ...data, sexualHistory: v })}
+        />
+        <TextArea
+          label="People the Subject Admires"
+          value={data.admiredPeople}
+          onChange={(v: string) => setData({ ...data, admiredPeople: v })}
+        />
+        <TextArea
+          label="People the Subject Dislikes"
+          value={data.dislikedPeople}
+          onChange={(v: string) => setData({ ...data, dislikedPeople: v })}
+        />
 
-          <Area label="Dreams for the Future" name="dreams" />
-          <Area label="Fears" name="fears" />
+        {/* ================= PSYCHOLOGY ================= */}
+        <TextArea
+          label="Dreams for the Future"
+          value={data.dreams}
+          onChange={(v: string) => setData({ ...data, dreams: v })}
+        />
+        <TextArea
+          label="Fears"
+          value={data.fears}
+          onChange={(v: string) => setData({ ...data, fears: v })}
+        />
+        <TextArea
+          label="Personality Traits / Habits / Sayings"
+          value={data.personalityTraits}
+          onChange={(v: string) => setData({ ...data, personalityTraits: v })}
+        />
 
-          <Area
-            label="Personality Traits / Habits / Sayings"
-            name="personalityTraits"
-          />
+        {/* ================= RELATIONSHIPS ================= */}
+        <TextArea
+          label="Romantic Relationships"
+          value={data.romanticRelationships}
+          onChange={(v: string) =>
+            setData({ ...data, romanticRelationships: v })
+          }
+        />
+        <TextArea
+          label="Family Relationships"
+          value={data.familyRelationships}
+          onChange={(v: string) => setData({ ...data, familyRelationships: v })}
+        />
+        <TextArea
+          label="Problem Relationships"
+          value={data.problemRelationships}
+          onChange={(v: string) =>
+            setData({ ...data, problemRelationships: v })
+          }
+        />
 
-          <Area label="Romantic Relationships" name="romanticRelationships" />
-          <Area label="Family Relationships" name="familyRelationships" />
-          <Area label="Problem Relationships" name="problemRelationships" />
+        {/* ================= LIFE SITUATION ================= */}
+        <TextArea
+          label="Employment / School"
+          value={data.employment}
+          onChange={(v: string) => setData({ ...data, employment: v })}
+        />
+        <TextArea
+          label="Economic Status / Behavior"
+          value={data.economicStatus}
+          onChange={(v: string) => setData({ ...data, economicStatus: v })}
+        />
+        <TextArea
+          label="Pets / Plants"
+          value={data.petsAndPlants}
+          onChange={(v: string) => setData({ ...data, petsAndPlants: v })}
+        />
 
-          <Area label="Employment / School" name="employment" />
-          <Area label="Economic Status / Behavior" name="economicStatus" />
-          <Area label="Pets / Plants" name="petsPlants" />
+        {/* ================= SKILLS / HABITS ================= */}
+        <ListInput
+          label="Special Skills / Fighting / Languages"
+          values={data.specialSkills}
+          onChange={(v: string[]) => setData({ ...data, specialSkills: v })}
+        />
+        <ListInput
+          label="Hobbies / Recreation"
+          values={data.hobbies}
+          onChange={(v: string[]) => setData({ ...data, hobbies: v })}
+        />
+        <TextArea
+          label="Likes / Dislikes"
+          value={data.likesDislikes}
+          onChange={(v: string) => setData({ ...data, likesDislikes: v })}
+        />
+        <TextArea
+          label="Habits"
+          value={data.habits}
+          onChange={(v: string) => setData({ ...data, habits: v })}
+        />
+        <TextArea
+          label="Favorite Phrases"
+          value={data.favoritePhrases}
+          onChange={(v: string) => setData({ ...data, favoritePhrases: v })}
+        />
 
-          <Area
-            label="Special Skills / Fighting / Languages"
-            name="specialSkills"
-          />
-          <Area label="Hobbies / Recreation" name="hobbies" />
-          <Area label="Likes / Dislikes" name="likesDislikes" />
-          <Area label="Habits" name="habits" />
-          <Area label="Favorite Phrases" name="favoritePhrases" />
-          <Area label="Others" name="others" />
-        </div>
+        {/* ================= OTHER ================= */}
+        <TextArea
+          label="Others"
+          value={data.others}
+          onChange={(v: string) => setData({ ...data, others: v })}
+        />
       </div>
 
-      <button className="pdf-btn" onClick={exportPDF}>
-        Download PDF
+      <button className="pdf-btn" onClick={() => generateCharacterPDF(data)}>
+        Generate PDF
       </button>
     </>
   );
 };
 
-export default CharacterSheet;
+export default CharacterForm;
